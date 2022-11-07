@@ -30,13 +30,42 @@ const reviewsCollection = db.collection("reviews");
 // Custome Middlewares
 // ------------------- //
 
+const getLimitedRecipes = async (req, res, next) => {
+  const queryParams = req.query;
+  if (queryParams.limit) {
+    const limit = +queryParams.limit;
+    const recipes = await recipesCollection
+      .find({})
+      .limit(limit)
+      .map((recipe) => {
+        return {
+          _id: recipe._id,
+          name: recipe.name,
+          picture: recipe.picture,
+          price: recipe.price,
+          ratings: recipe.ratings,
+        };
+      })
+      .toArray();
+
+    return res.status(200).json({
+      status: "success",
+      data: {
+        recipes,
+      },
+    });
+  }
+
+  next();
+};
+
 // ------------------- //
 // Routes and Handlers
 // ------------------- //
 async function run() {
   try {
     // Read operation on Recepies collection
-    app.get("/api/v1/recipes", async (req, res) => {
+    app.get("/api/v1/recipes", getLimitedRecipes, async (req, res) => {
       const query = {};
 
       const cursor = recipesCollection.find(query);
