@@ -16,21 +16,44 @@ app.use(express.json());
 // ------------------ //
 // Connect to MongoDB
 // ----------------- //
-
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.hjjckmu.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   serverApi: ServerApiVersion.v1,
 });
-client.connect((err) => {
-  console.log("Connected to Database");
-});
+const db = client.db("cookAndTaste");
+const recipesCollection = db.collection("recipes");
+const reviewsCollection = db.collection("reviews");
 
+// ------------------- //
+// Custome Middlewares
+// ------------------- //
+
+// ------------------- //
 // Routes and Handlers
-app.get("/", (req, res) => {
-  res.send("Hello from cook and taste server!");
-});
+// ------------------- //
+async function run() {
+  try {
+    // Read operation on Recepies collection
+    app.get("/api/v1/recipes", async (req, res) => {
+      const query = {};
+
+      const cursor = recipesCollection.find(query);
+      const recipes = await cursor.toArray();
+
+      res.status(200).json({
+        status: "success",
+        data: {
+          recipes,
+        },
+      });
+    });
+  } finally {
+    // await client.close();
+  }
+}
+run().catch((error) => console.error(error));
 
 // ------------ //
 // Start server
