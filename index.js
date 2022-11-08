@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const morgan = require("morgan");
 require("dotenv").config();
 
@@ -44,6 +44,7 @@ const getLimitedRecipes = async (req, res, next) => {
           picture: recipe.picture,
           price: recipe.price,
           ratings: recipe.ratings,
+          description: recipe.description,
         };
       })
       .toArray();
@@ -75,6 +76,21 @@ async function run() {
         status: "success",
         data: {
           recipes,
+        },
+      });
+    });
+
+    // Read a specific Recipe
+    app.get("/api/v1/recipes/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+
+      const recipe = await recipesCollection.findOne(query);
+
+      res.status(200).json({
+        status: "success",
+        data: {
+          recipe,
         },
       });
     });
