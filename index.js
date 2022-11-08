@@ -94,6 +94,40 @@ async function run() {
         },
       });
     });
+
+    // Create user review on database
+
+    app.post("/api/v1/reviews", async (req, res) => {
+      const body = req.body;
+      const result = await reviewsCollection.insertOne(body);
+
+      const recipeReview = Object.assign({ _id: result.insertedId }, body);
+
+      res.status(201).json({
+        status: "success",
+        data: {
+          recipeReview,
+        },
+      });
+    });
+
+    // Read review data from database
+
+    app.get("/api/v1/reviews/:productId", async (req, res) => {
+      const id = req.params.productId;
+      const query = { recipeId: id };
+      const cursor = reviewsCollection.find(query).sort({ reviewTime: -1 });
+
+      const recipeReviews = await cursor.toArray();
+
+      //
+      res.status(200).json({
+        status: "success",
+        data: {
+          recipeReviews,
+        },
+      });
+    });
   } finally {
     // await client.close();
   }
