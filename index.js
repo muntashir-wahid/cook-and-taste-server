@@ -111,8 +111,7 @@ async function run() {
       });
     });
 
-    // Read review data from database
-
+    // Read review data from database for a specific recipe
     app.get("/api/v1/reviews/:productId", async (req, res) => {
       const id = req.params.productId;
       const query = { recipeId: id };
@@ -125,6 +124,25 @@ async function run() {
         status: "success",
         data: {
           recipeReviews,
+        },
+      });
+    });
+
+    // Read an users Reviews
+    app.get("/api/v1/reviews/", async (req, res) => {
+      const { email } = req.query;
+      const filter = { reviewer: { email } };
+
+      const cursor = reviewsCollection.find({
+        "reviewer.email": { $eq: email },
+      });
+      const userReviews = await cursor.toArray();
+
+      res.status(200).json({
+        status: "success",
+        result: userReviews.length,
+        data: {
+          userReviews,
         },
       });
     });
