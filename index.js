@@ -37,6 +37,7 @@ const getLimitedRecipes = async (req, res, next) => {
     const recipes = await recipesCollection
       .find({})
       .limit(limit)
+      .sort({ _id: -1 })
       .map((recipe) => {
         return {
           _id: recipe._id,
@@ -65,6 +66,23 @@ const getLimitedRecipes = async (req, res, next) => {
 // ------------------- //
 async function run() {
   try {
+    // Create a Recipe
+
+    app.post("/api/v1/recipes", async (req, res) => {
+      const recipe = req.body;
+
+      const result = await recipesCollection.insertOne(recipe);
+
+      recipe._id = result.insertedId;
+
+      res.status(201).json({
+        status: "success",
+        data: {
+          recipe,
+        },
+      });
+    });
+
     // Read operation on Recepies collection
     app.get("/api/v1/recipes", getLimitedRecipes, async (req, res) => {
       const query = {};
@@ -94,6 +112,10 @@ async function run() {
         },
       });
     });
+
+    // ------- //
+    // Reviews
+    // ------ //
 
     // Create user review on database
 
@@ -129,6 +151,7 @@ async function run() {
     });
 
     // Read an users Reviews
+
     app.get("/api/v1/reviews/", async (req, res) => {
       const { email } = req.query;
       const filter = { reviewer: { email } };
