@@ -155,7 +155,6 @@ async function run() {
       const query = { _id: ObjectId(id) };
 
       const result = await reviewsCollection.deleteOne(query);
-      console.log(result);
 
       res.status(200).json({
         status: "success",
