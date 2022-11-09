@@ -146,6 +146,24 @@ async function run() {
         },
       });
     });
+
+    // Delete a specific review
+
+    app.delete("/api/v1/reviews/:reviewId", async (req, res) => {
+      const id = req.params.reviewId;
+
+      const query = { _id: ObjectId(id) };
+
+      const result = await reviewsCollection.deleteOne(query);
+      console.log(result);
+
+      res.status(200).json({
+        status: "success",
+        data: {
+          result,
+        },
+      });
+    });
   } finally {
     // await client.close();
   }
