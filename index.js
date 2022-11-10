@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const jwt = require("jsonwebtoken");
 const morgan = require("morgan");
 require("dotenv").config();
 
@@ -29,6 +30,8 @@ const reviewsCollection = db.collection("reviews");
 // ------------------- //
 // Custome Middlewares
 // ------------------- //
+
+// Limit recipes
 
 const getLimitedRecipes = async (req, res, next) => {
   const queryParams = req.query;
@@ -61,11 +64,53 @@ const getLimitedRecipes = async (req, res, next) => {
   next();
 };
 
+// Verify jwt
+
+const verifyToken = (req, res, next) => {
+  const authorization = req.headers.authorization;
+
+  if (!authorization) {
+    return res.status(401).json({
+      status: "fail",
+      message: "unauthorized access",
+    });
+  }
+
+  const [_, token] = authorization.split(" ");
+
+  jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({
+        status: "fail",
+        message: "unauthorized access",
+      });
+    }
+
+    req.decoded = decoded;
+    next();
+  });
+};
+
 // ------------------- //
 // Routes and Handlers
 // ------------------- //
 async function run() {
   try {
+    // Authorization
+
+    app.post("/api/v1/auth", (req, res) => {
+      const user = req.body;
+
+      const token = jwt.sign(user, process.env.SECRET_KEY, { expiresIn: "1h" });
+
+      res.status(200).json({
+        status: "success",
+        data: {
+          token,
+        },
+      });
+    });
+
     // Create a Recipe
 
     app.post("/api/v1/recipes", async (req, res) => {
@@ -121,6 +166,7 @@ async function run() {
 
     app.post("/api/v1/reviews", async (req, res) => {
       const body = req.body;
+
       const result = await reviewsCollection.insertOne(body);
 
       const recipeReview = Object.assign({ _id: result.insertedId }, body);
@@ -168,9 +214,17 @@ async function run() {
 
     // Read an users Reviews
 
-    app.get("/api/v1/reviews/", async (req, res) => {
+    app.get("/api/v1/reviews/", verifyToken, async (req, res) => {
       const { email } = req.query;
-      const filter = { reviewer: { email } };
+      const decoded = req.decoded;
+      console.log(email, decoded);
+
+      if (email !== decoded.email) {
+        return res.status(403).json({
+          status: "fail",
+          message: "unauthorized access",
+        });
+      }
 
       const cursor = reviewsCollection.find({
         "reviewer.email": { $eq: email },
