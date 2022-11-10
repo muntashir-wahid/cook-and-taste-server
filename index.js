@@ -133,6 +133,22 @@ async function run() {
       });
     });
 
+    // Read a specific review
+
+    app.get("/api/v1/reviews/:reviewId", async (req, res) => {
+      const id = req.params.reviewId;
+      const query = { _id: ObjectId(id) };
+
+      const review = await reviewsCollection.findOne(query);
+
+      res.status(200).json({
+        status: "success",
+        data: {
+          review,
+        },
+      });
+    });
+
     // Read review data from database for a specific recipe
     app.get("/api/v1/reviews/:productId", async (req, res) => {
       const id = req.params.productId;
@@ -178,6 +194,27 @@ async function run() {
       const query = { _id: ObjectId(id) };
 
       const result = await reviewsCollection.deleteOne(query);
+
+      res.status(200).json({
+        status: "success",
+        data: {
+          result,
+        },
+      });
+    });
+
+    // Update a review
+
+    app.patch("/api/v1/reviews/:reviewId", async (req, res) => {
+      const id = req.params.reviewId;
+      const body = req.body;
+      const filter = { _id: ObjectId(id) };
+
+      const updatedDoc = {
+        $set: body,
+      };
+
+      const result = await reviewsCollection.updateOne(filter, updatedDoc);
 
       res.status(200).json({
         status: "success",
