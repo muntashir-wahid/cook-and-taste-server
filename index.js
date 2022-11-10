@@ -87,7 +87,7 @@ async function run() {
     app.get("/api/v1/recipes", getLimitedRecipes, async (req, res) => {
       const query = {};
 
-      const cursor = recipesCollection.find(query);
+      const cursor = recipesCollection.find(query).sort({ _id: -1 });
       const recipes = await cursor.toArray();
 
       res.status(200).json({
