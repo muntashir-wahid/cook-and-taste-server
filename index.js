@@ -135,7 +135,7 @@ async function run() {
 
     // Read a specific review
 
-    app.get("/api/v1/reviews/:reviewId", async (req, res) => {
+    app.get("/api/v1/review/:reviewId", async (req, res) => {
       const id = req.params.reviewId;
       const query = { _id: ObjectId(id) };
 
